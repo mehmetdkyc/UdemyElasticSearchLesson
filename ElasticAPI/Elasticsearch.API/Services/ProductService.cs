@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
+using Elastic.Clients.Elasticsearch;
 using Elasticsearch.API.Dtos;
 using Elasticsearch.API.Exceptions;
 using Elasticsearch.API.Models;
 using Elasticsearch.API.Repositories;
-using Nest;
 
 namespace Elasticsearch.API.Services
 {
@@ -39,15 +39,16 @@ namespace Elasticsearch.API.Services
         public async Task<bool> UpdateAsync(ProductUpdateDto updateDto)
         {
             var response = await _repository.UpdateAsync(updateDto);
-            if (!response.IsValid && response.ServerError.Status == 404) throw new NotFoundException(nameof(Product), updateDto.Id);
+            if (!response.IsValidResponse && response.ElasticsearchServerError!.Status == 404) throw new NotFoundException(nameof(Product), updateDto.Id);
             return true;
         }
 
         public async Task<bool> DeleteAsync(string id)
         {
             var response= await _repository.DeleteAsync(id);
-            if (!response.IsValid && response.Result == Result.NotFound) throw new NotFoundException(nameof(Product),id);
-            return response.IsValid;
+            var asd = response.IsSuccess();
+            if (!response.IsValidResponse && response.Result == Result.NotFound) throw new NotFoundException(nameof(Product),id);
+            return response.IsSuccess();
         }
     }
 }

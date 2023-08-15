@@ -1,16 +1,16 @@
-﻿using Elasticsearch.API.Dtos;
+﻿using Elastic.Clients.Elasticsearch;
+using Elasticsearch.API.Dtos;
 using Elasticsearch.API.Models;
-using Nest;
 
 namespace Elasticsearch.API.Repositories
 {
     public class ProductRepository
     {
-         private readonly ElasticClient _client;
+         private readonly ElasticsearchClient _client;
         private const string indexName = "products";
 
 
-        public ProductRepository(ElasticClient client)
+        public ProductRepository(ElasticsearchClient client)
         {
             _client = client;
         }
@@ -20,7 +20,7 @@ namespace Elasticsearch.API.Repositories
             product.Created=DateTime.Now;
 
             var response = await _client.IndexAsync(product,x=>x.Index(indexName)); //buradaki products yazan kısım hangi tabloya kaydedeceğimizi söylemektir.
-            if (!response.IsValid) return null;
+            if (!response.IsValidResponse) return null;
 
             product.Id = response.Id; //elasticsearchün atadığı idyi bizim objeye setliyoruz.
             return product;
@@ -29,7 +29,7 @@ namespace Elasticsearch.API.Repositories
         public async Task<List<Product>> GetAllAsync()
         {
             var result = await _client.SearchAsync<Product>(s => s.Index(indexName).Query(q=>q.MatchAll())); // elasticsearchteki gibi ilk index ismi sonra query dedikten sonra matchAll ile tüm dataları getiriyoruz.
-            foreach (var item in result.Hits) item.Source.Id = item.Id;
+            foreach (var item in result.Hits) item.Source!.Id = item.Id;
             return result.Documents.ToList();
 
 
@@ -38,9 +38,9 @@ namespace Elasticsearch.API.Repositories
         public async Task<Product?> GetByIdAsync(string id)
         {
             var result = await _client.GetAsync<Product>(id,x=>x.Index(indexName));
-            if (!result.IsValid) return null;
+            if (!result.IsValidResponse) return null;
 
-            result.Source.Id= result.Id;
+            result.Source!.Id= result.Id;
             return result.Source ;
 
 
@@ -49,7 +49,7 @@ namespace Elasticsearch.API.Repositories
         public async Task<UpdateResponse<Product>> UpdateAsync(ProductUpdateDto updateDto)
         {
             
-            var response = await _client.UpdateAsync<Product,ProductUpdateDto>(updateDto.Id, x=>x.Index(indexName).Doc(updateDto));  //buradak updatebyqueryasync metotlarında queryler belirterek idsi şu olanı güncelle veya ismi şu olanı güncelle gibi kurallar koyarak güncellemeler de yapabiliriz.
+            var response = await _client.UpdateAsync<Product,ProductUpdateDto>(indexName,updateDto.Id,x=>x.Doc(updateDto));  //buradak updatebyqueryasync metotlarında queryler belirterek idsi şu olanı güncelle veya ismi şu olanı güncelle gibi kurallar koyarak güncellemeler de yapabiliriz.
             return response;
 
         }

@@ -15,7 +15,7 @@ namespace Elasticsearch.API.Middlewares
                 {
                     context.Response.ContentType = "application/json";
                     var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
-                    var statusCode = exceptionFeature.Error switch
+                    var statusCode = exceptionFeature!.Error switch
                     {
                         NotFoundException => 404,
                         ClientSideException => 400,
