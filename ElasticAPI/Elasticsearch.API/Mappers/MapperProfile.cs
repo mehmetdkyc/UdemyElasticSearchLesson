@@ -22,6 +22,9 @@ namespace Elasticsearch.API.Mappers
                 ForCtorParam("Width", opt => opt.MapFrom(src => src.Width)).
                 ForCtorParam("Color", opt => opt.MapFrom(src => src.Color)).
                 ReverseMap();
+
+            CreateMap<ECommerceDto, ECommerce>().ReverseMap();
+            CreateMap<ProductECommerceDto, ProductECommerce>().ReverseMap();
         }
     }
 }
